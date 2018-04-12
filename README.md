@@ -20,3 +20,4 @@ or [6xq.net](http://6xq.net/projects/pianobar/).
 ### Download/Installation
 
 There are community provided packages available for most Linux distributions (see your distribution’s package manager), Mac OS X ([MacPorts](http://trac.macports.org/browser/trunk/dports/audio/pianobar/Portfile) or [homebrew](http://brew.sh/)) and *BSD as well as a [native Windows port](https://github.com/thedmd/pianobar-windows).
+# pianobar_plex
