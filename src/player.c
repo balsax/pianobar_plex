@@ -651,35 +651,17 @@ void *BarPlayerThread (void *data) {
     }
 
 //Creates raw playlists		!!,!! is the delimiter
+//Works with companion php program to create iTunes XML playlist
 
-//        sprintf(buffer, "%s",player->station);
-
-//        replace(buffer, sizeof(buffer), '/', "-");
-//        replace(buffer, sizeof(buffer), '*', "-");
-//        replace(buffer, sizeof(buffer), '\"', "-");
-//        replace(buffer, sizeof(buffer), '$', "-");
-//        replace(buffer, sizeof(buffer), '&', "-");
-//        replace(buffer, sizeof(buffer), '(', "-");
-//        replace(buffer, sizeof(buffer), ')', "-");
-
+/*
 	char * player_station [2000];
 	sprintf(player_station, "/media/data/playlists/raw/%s",player->station);
 
         FILE *out = fopen(player_station,"a");
 
-//	sprintf(buffer,"%s!!,!!%s", player->title, player->save_complete);
-
-//        replace(buffer, sizeof(buffer), '/', "-");
-//        replace(buffer, sizeof(buffer), '*', "-");
-//        replace(buffer, sizeof(buffer), '\"', "-");
-//        replace(buffer, sizeof(buffer), '$', "-");
-//        replace(buffer, sizeof(buffer), '&', "-");
-//        replace(buffer, sizeof(buffer), '(', "-");
-//        replace(buffer, sizeof(buffer), ')', "-");
-
         fprintf(out, "%s!!,!!%s\r\n",player->title, player->save_complete);
         fclose(out);
-
+*/
 	return (void *) pret;
 }
 
