@@ -1,0 +1,5 @@
+#!/bin/bash
+export PKG_CONFIG_PATH=/home/mikemc/json/lib/pkgconfig
+make clean
+make
+make install

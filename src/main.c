@@ -163,6 +163,31 @@ static bool BarMainGetLoginCredentials (BarSettings_t *settings,
 	return true;
 }
 
+/* check for save folder, create if does not exist
+*/
+static void BarMainCheckSaveDirectory (BarSettings_t *settings) {
+        BarUiMsg (settings, MSG_INFO, "Looking for save directory ");
+
+        char *save_dir = settings->save_dir;
+
+        if (0 != access(save_dir, F_OK)) {
+                if (ENOTDIR == errno) {
+                        BarUiMsg (settings, MSG_ERR, "\"%s\" Is not a directory!\n", save_dir);
+                }
+                if (ENOENT == errno) {
+                        BarUiMsg (settings, MSG_NONE, "\n%s\nNot found! attempting to create... ", save_dir);
+
+                        char * buffer [2000];
+
+                        sprintf(buffer, "mkdir -p \"%s\"", save_dir);
+                        system(buffer);
+                        BarUiMsg (settings, MSG_NONE, "Ok. \n");
+                }
+        } else {
+                BarUiMsg (settings, MSG_NONE, "Ok. \n");
+        }
+}
+
 /*	get station list
  */
 static bool BarMainGetStations (BarApp_t *app) {
@@ -170,7 +195,7 @@ static bool BarMainGetStations (BarApp_t *app) {
 	CURLcode wRet;
 	bool ret;
 
-	BarUiMsg (&app->settings, MSG_INFO, "Get stations... ");
+	BarUiMsg (&app->settings, MSG_INFO, "Get stations... \n");
 	ret = BarUiPianoCall (app, PIANO_REQUEST_GET_STATIONS, NULL, &pRet, &wRet);
 	BarUiStartEventCmd (&app->settings, "usergetstations", NULL, NULL, &app->player,
 			app->ph.stations, pRet, wRet);
@@ -194,6 +219,9 @@ static void BarMainGetInitialStation (BarApp_t *app) {
 		app->nextStation = BarUiSelectStation (app, app->ph.stations,
 				"Select station: ", NULL, app->settings.autoselect);
 	}
+        if (app->curStation != NULL) {
+                BarUiPrintStation (&app->settings, app->curStation);
+        }
 }
 
 /*	wait for user input
@@ -216,7 +244,7 @@ static void BarMainGetPlaylist (BarApp_t *app) {
 	reqData.station = app->nextStation;
 	reqData.quality = app->settings.audioQuality;
 
-	BarUiMsg (&app->settings, MSG_INFO, "Receiving new playlist... ");
+//	BarUiMsg (&app->settings, MSG_INFO, "Receiving new playlist... ");
 	if (!BarUiPianoCall (app, PIANO_REQUEST_GET_PLAYLIST,
 			&reqData, &pRet, &wRet)) {
 		app->nextStation = NULL;
@@ -241,11 +269,11 @@ static void BarMainStartPlayback (BarApp_t *app, pthread_t *playerThread) {
 
 	const PianoSong_t * const curSong = app->playlist;
 	assert (curSong != NULL);
-
+/*
 	BarUiPrintSong (&app->settings, curSong, app->curStation->isQuickMix ?
 			PianoFindStationById (app->ph.stations,
 			curSong->stationId) : NULL);
-
+*/
 	static const char httpPrefix[] = "http://";
 	/* avoid playing local files */
 	if (curSong->audioUrl == NULL ||
@@ -256,6 +284,10 @@ static void BarMainStartPlayback (BarApp_t *app, pthread_t *playerThread) {
 		memset (&app->player, 0, sizeof (app->player));
 
 		app->player.url = curSong->audioUrl;
+                app->player.album = curSong->album;
+                app->player.artist = curSong->artist;
+                app->player.title = curSong->title;
+                app->player.station = app->curStation->name;
 		app->player.gain = curSong->fileGain;
 		app->player.settings = &app->settings;
 		app->player.songDuration = curSong->length;
@@ -335,6 +367,11 @@ static void BarMainPrintTime (BarApp_t *app) {
 /*	main loop
  */
 static void BarMainLoop (BarApp_t *app) {
+        time_t currentTime;
+        time_t songStartTime=0;
+
+        time(&currentTime);
+
 	pthread_t playerThread;
 
 	if (!BarMainGetLoginCredentials (&app->settings, &app->input)) {
@@ -356,42 +393,42 @@ static void BarMainLoop (BarApp_t *app) {
 	memset (&app->player, 0, sizeof (app->player));
 
 	while (!app->doQuit) {
-		/* song finished playing, clean up things/scrobble song */
-		if (app->player.mode == PLAYER_FINISHED) {
-			if (app->player.interrupted != 0) {
-				app->doQuit = 1;
-			}
-			BarMainPlayerCleanup (app, &playerThread);
-		}
+                time(&currentTime);
+        	double seconds=difftime(currentTime, songStartTime);
 
-		/* check whether player finished playing and start playing new
-		 * song */
-		if (app->player.mode == PLAYER_DEAD) {
-			/* what's next? */
-			if (app->playlist != NULL) {
-				PianoSong_t *histsong = app->playlist;
-				app->playlist = PianoListNextP (app->playlist);
-				histsong->head.next = NULL;
-				BarUiHistoryPrepend (app, histsong);
+	        if (seconds >= rand() % 120 + 15){
+
+			/* song finished playing, clean up things/scrobble song */
+			if (app->player.mode == PLAYER_FINISHED) {
+				BarMainPlayerCleanup (app, &playerThread);
 			}
-			if (app->playlist == NULL && app->nextStation != NULL && !app->doQuit) {
-				if (app->nextStation != app->curStation) {
-					BarUiPrintStation (&app->settings, app->nextStation);
+
+			/* check whether player finished playing and start playing new
+			 * song */
+			if (app->player.mode == PLAYER_DEAD) {
+				/* what's next? */
+				if (app->playlist != NULL) {
+					PianoSong_t *histsong = app->playlist;
+					app->playlist = PianoListNextP (app->playlist);
+					histsong->head.next = NULL;
+					BarUiHistoryPrepend (app, histsong);
 				}
-				BarMainGetPlaylist (app);
-			}
-			/* song ready to play */
-			if (app->playlist != NULL) {
-				BarMainStartPlayback (app, &playerThread);
+				if (app->playlist == NULL && app->nextStation != NULL && !app->doQuit) {
+					BarMainGetPlaylist (app);
+				}
+				/* song ready to play */
+				if (app->playlist != NULL) {
+					time(&songStartTime);
+					BarMainStartPlayback (app, &playerThread);
+				}
 			}
 		}
-
 		BarMainHandleUserInput (app);
 
 		/* show time */
-		if (app->player.mode == PLAYER_PLAYING) {
-			BarMainPrintTime (app);
-		}
+//		if (app->player.mode == PLAYER_PLAYING) {
+//			BarMainPrintTime (app);
+//		}
 	}
 
 	if (app->player.mode != PLAYER_DEAD) {

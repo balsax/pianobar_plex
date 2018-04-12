@@ -110,6 +110,7 @@ void BarSettingsInit (BarSettings_t *settings) {
  */
 void BarSettingsDestroy (BarSettings_t *settings) {
 	free (settings->controlProxy);
+free (settings->save_dir);
 	free (settings->proxy);
 	free (settings->bindTo);
 	free (settings->username);
@@ -158,6 +159,7 @@ void BarSettingsRead (BarSettings_t *settings) {
 	/* apply defaults */
 	settings->audioQuality = PIANO_AQ_HIGH;
 	settings->autoselect = true;
+settings->save_dir = NULL;
 	settings->history = 5;
 	settings->volume = 0;
 	settings->gainMul = 1.0;
@@ -183,7 +185,7 @@ void BarSettingsRead (BarSettings_t *settings) {
 	settings->msgFormat[MSG_NONE].postfix = NULL;
 	settings->msgFormat[MSG_INFO].prefix = strdup ("(i) ");
 	settings->msgFormat[MSG_INFO].postfix = NULL;
-	settings->msgFormat[MSG_PLAYING].prefix = strdup ("|>  ");
+	settings->msgFormat[MSG_PLAYING].prefix = strdup ("");
 	settings->msgFormat[MSG_PLAYING].postfix = NULL;
 	settings->msgFormat[MSG_TIME].prefix = strdup ("#   ");
 	settings->msgFormat[MSG_TIME].postfix = NULL;
@@ -301,6 +303,9 @@ void BarSettingsRead (BarSettings_t *settings) {
 			} else if (streq ("encrypt_password", key)) {
 				free (settings->outkey);
 				settings->outkey = strdup (val);
+                        } else if (streq ("save_dir", key)) {
+                                free (settings->save_dir);
+                                settings->save_dir = BarSettingsExpandTilde (val, userhome);
 			} else if (streq ("decrypt_password", key)) {
 				free (settings->inkey);
 				settings->inkey = strdup (val);

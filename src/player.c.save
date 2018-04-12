@@ -35,7 +35,8 @@ THE SOFTWARE.
 #include <assert.h>
 #include <arpa/inet.h>
 
-#include <stdio.h>
+
+
 
 #include <libavcodec/avcodec.h>
 #include <libavutil/avutil.h>
@@ -298,8 +299,6 @@ static bool openStream (player_t * const player) {
 	replace(save_artist, sizeof(save_artist), '\"', "-");
         replace(save_artist, sizeof(save_artist), '$', "-");
         replace(save_artist, sizeof(save_artist), '&', "-");
-        replace(save_artist, sizeof(save_artist), '(', "-");
-        replace(save_artist, sizeof(save_artist), ')', "-");
 
 	sprintf(save_album,"%s",player->album);
 	replace(save_album, sizeof(save_album), '/', "-");
@@ -307,27 +306,24 @@ static bool openStream (player_t * const player) {
 	replace(save_album, sizeof(save_album), '\"', "-");
         replace(save_album, sizeof(save_album), '$', "-");
         replace(save_album, sizeof(save_album), '&', "-");
-        replace(save_album, sizeof(save_album), '(', "-");
-        replace(save_album, sizeof(save_album), ')', "-");
 
         sprintf(save_path, "%s%s - %s/", save_path, save_artist, save_album);
 
        if(stat(save_path,&st)!= 0){
-            mkdir(save_path, 0700);
-//sprintf(command_path,"mkdir -p /home/mikemc/testmusic");
-//system(command_path);
+//            mkdir(save_path, 0700);
+sprintf(command_path,"mkdir -p %s","/home/mikemc/testmusic");
+system(command_path);
         }
 
 
+
         sprintf(save_filename, "%s.aac", player->title);
+
 	replace(save_filename, sizeof(save_filename), '/', "-");
 	replace(save_filename, sizeof(save_filename), '*', "-");
 	replace(save_filename, sizeof(save_filename), '\"', "-");
         replace(save_filename, sizeof(save_filename), '$', "-");
         replace(save_filename, sizeof(save_filename), '&', "-");
-        replace(save_filename, sizeof(save_filename), '(', "-");
-        replace(save_filename, sizeof(save_filename), ')', "-");
-
 
         sprintf(tmp_filename, "/tmp/%s",  save_filename);
         strcpy(player->tmp_filename, tmp_filename);
@@ -337,7 +333,7 @@ static bool openStream (player_t * const player) {
 
         if( access( save_complete, F_OK ) != -1){
             	player->save_file = false;
-//		system("echo -n 't' > ~/.config/pianobar/ctl");
+		system("echo -n 't' > ~/.config/pianobar/ctl");
 
 		BarUiMsg (player->settings, MSG_PLAYING, "\033[1;31m%s by %s already exists.\033[0m\n", player->title, player->artist);
 
@@ -368,7 +364,6 @@ static bool openStream (player_t * const player) {
         ost->codec->time_base = ost->time_base;
 
         avformat_write_header( ofcx, NULL );
-
     }
 
     player->ofcx = ofcx;
@@ -634,8 +629,9 @@ void *BarPlayerThread (void *data) {
 	} while (retry);
 
 	player->mode = PLAYER_FINISHED;
-	char * buffer [2000];
+
     if (player->save_file && !player->doQuit ){
+        char * buffer [2000];
         av_write_trailer(player->ofcx);
         avformat_free_context (player->ofcx);
         avio_close(player->ofcx->pb);
@@ -645,40 +641,9 @@ void *BarPlayerThread (void *data) {
         sprintf(buffer, "rm \"%s\"",player->tmp_filename);
         system(buffer);
 
-
         //"tables" song so Pandora doesn't play it again for a month
 //      system("echo -n 't' > ~/.config/pianobar/ctl");
     }
-
-//Creates raw playlists		!!,!! is the delimiter
-
-//        sprintf(buffer, "%s",player->station);
-
-//        replace(buffer, sizeof(buffer), '/', "-");
-//        replace(buffer, sizeof(buffer), '*', "-");
-//        replace(buffer, sizeof(buffer), '\"', "-");
-//        replace(buffer, sizeof(buffer), '$', "-");
-//        replace(buffer, sizeof(buffer), '&', "-");
-//        replace(buffer, sizeof(buffer), '(', "-");
-//        replace(buffer, sizeof(buffer), ')', "-");
-
-	char * player_station [2000];
-	sprintf(player_station, "/media/data/playlists/raw/%s",player->station);
-
-        FILE *out = fopen(player_station,"a");
-
-//	sprintf(buffer,"%s!!,!!%s", player->title, player->save_complete);
-
-//        replace(buffer, sizeof(buffer), '/', "-");
-//        replace(buffer, sizeof(buffer), '*', "-");
-//        replace(buffer, sizeof(buffer), '\"', "-");
-//        replace(buffer, sizeof(buffer), '$', "-");
-//        replace(buffer, sizeof(buffer), '&', "-");
-//        replace(buffer, sizeof(buffer), '(', "-");
-//        replace(buffer, sizeof(buffer), ')', "-");
-
-        fprintf(out, "%s!!,!!%s\r\n",player->title, player->save_complete);
-        fclose(out);
 
 	return (void *) pret;
 }

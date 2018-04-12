@@ -308,7 +308,7 @@ bool BarUiPianoCall (BarApp_t * const app, const PianoRequestType_t type,
 						PianoErrorToStr (pRetLocal));
 				goto cleanup;
 			} else {
-				BarUiMsg (&app->settings, MSG_NONE, "Ok.\n");
+				//BarUiMsg (&app->settings, MSG_NONE, "Ok.\n");
 				ret = true;
 			}
 		}

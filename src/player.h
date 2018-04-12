@@ -61,6 +61,12 @@ typedef struct {
 	AVFilterContext *fvolume;
 	AVFilterGraph *fgraph;
 	AVFormatContext *fctx;
+
+AVFormatContext *ofcx;
+
+AVPacket pkt_write;
+AVStream *ost;
+
 	AVStream *st;
 	AVCodecContext *cctx;
 	AVFilterContext *fbufsink, *fabuf;
@@ -74,6 +80,14 @@ typedef struct {
 	double gain;
 	char *url;
 	const BarSettings_t *settings;
+
+char *album;
+char *artist;
+char *title;
+char *station;
+bool save_file;
+char tmp_filename [1000];
+char save_complete[1000];
 
 	/* measured in seconds */
 	volatile unsigned int songDuration;

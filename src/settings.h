@@ -95,6 +95,7 @@ typedef struct {
 	char *proxy;
 	char *bindTo;
 	char *autostartStation;
+char *save_dir;
 	char *eventCmd;
 	char *loveIcon;
 	char *banIcon;
@@ -104,6 +105,7 @@ typedef struct {
 	char *listSongFormat;
 	char *fifo;
 	char *rpcHost, *rpcTlsPort, *partnerUser, *partnerPassword, *device, *inkey, *outkey, *caBundle;
+char tlsFingerprint[20];
 	char keys[BAR_KS_COUNT];
 	BarMsgFormatStr_t msgFormat[MSG_COUNT];
 } BarSettings_t;
